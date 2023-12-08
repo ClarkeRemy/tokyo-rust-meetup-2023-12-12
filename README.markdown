@@ -404,7 +404,7 @@ pub async fn use_mut() -> Result<(), ()> {
 
 Lets break it down.
 
-first we have the elements befor the macro in lexical scope
+first we have the elements before the macro in lexical scope
 ```rust
 pub async fn use_mut() -> Result<(), ()> {
   const MAX_OPS: usize = 10;
@@ -426,7 +426,7 @@ pub async fn use_mut() -> Result<(), ()> {
 }
 ```
 
-lets now look at the macro and it's use.
+Lets now look at the macro and it's use.
 
 Try to imagine the function signature you would need, 
 and how many arguments you would need to pass...
@@ -451,7 +451,7 @@ And you wouldn't have access to the labels in either case.
 
 # First steps into unsafe code
 
-Unsafe code has many forms, the the one that is most relavent has to do with memory allocation.
+Unsafe code has many forms, the the one that is most relevant has to do with memory allocation.
 
 To explore this lets make the most basic data structure. A user defined box.
 
@@ -464,7 +464,7 @@ pub(crate) struct MyBox<T> {
 This type has one job, own a value on the heap.
 It holds a pointer to that value.
 
-Let's consider the signatures and behavor of functions we want.
+Let's consider the signatures and behavior of functions we want.
 - ```rust 
   pub fn new(val: T) -> Self
   ```
@@ -474,7 +474,7 @@ Let's consider the signatures and behavor of functions we want.
   ```
   - consume self and it's allocation, moving the inner `T` out
 
-We will want to guarantee that when do not unbox it deallocates safely, for this we need an implementation of `core::ops::Drop`
+We will want to guarantee that when do not `unbox` it deallocates safely, for this we need an implementation of `core::ops::Drop`
 
 We also want to make accessing the inner `T`, cheap. For that we will have `core::ops::Deref`, and `core::ops::DerefMut`.
 
@@ -540,6 +540,10 @@ We can first start with something we know will blow up. Let's dereference a null
     let _x: i32 = unsafe { *null };
   }
 ```
+run the tests
+```
+cargo miri test
+```
 And it fails!
 ```
 test basic_box::obviously_fails ... error: Undefined Behavior: memory access failed: null pointer is a dangling pointer (it has no provenance)
@@ -547,12 +551,12 @@ test basic_box::obviously_fails ... error: Undefined Behavior: memory access fai
 
 We can now try with our functions.
 ```rust
-  #[test]
-  #[cfg(miri)]
-  fn constructor_destructor() {
-    let x = MyBox::<i32>::new(5); // constructor
-    core::mem::drop(x) // destructor
-  }
+#[test]
+#[cfg(miri)]
+fn constructor_destructor() {
+  let x = MyBox::<i32>::new(5); // constructor
+  core::mem::drop(x) // destructor
+}
 ```
 and ...
 ```
@@ -562,12 +566,12 @@ This passes!
 
 But we should try the base case. A zero sized type.
 ```rust
-  #[test]
-  #[cfg(miri)]
-  fn constructor_zst() {
-    let x = MyBox::<()>::new(()); // constructor
-    core::mem::drop(x) // destructor
-  }
+#[test]
+#[cfg(miri)]
+fn constructor_zst() {
+  let x = MyBox::<()>::new(()); // constructor
+  core::mem::drop(x) // destructor
+}
 ```
 and ...
 ```
@@ -600,10 +604,10 @@ impl<T> MyBox<T> {
 ```
 We can now ignore the test, as it's unreachable
 ```rust
-  #[test]
-  #[cfg_attr(miri, ignore)]
-  #[cfg(miri)]
-  fn constructor_zst() { /* ... */ }
+#[test]
+#[cfg_attr(miri, ignore)]
+#[cfg(miri)]
+fn constructor_zst() { /* ... */ }
 ```
 
 We can now work on `unbox`.
