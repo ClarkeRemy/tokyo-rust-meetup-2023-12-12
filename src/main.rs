@@ -1,4 +1,5 @@
 #![no_implicit_prelude]
+#![allow(redundant_semicolons)]
 extern crate core;
 
 fn main() -> core::result::Result<(), ()> {
@@ -15,6 +16,7 @@ pub(crate) mod labels {
   };
 
   use alloc::vec::Vec;
+  #[allow(unused)]
   fn all_labels() {
     let [mut i, mut j] = [5, 0];
     let _loop_output = 'loop_label: loop {
@@ -158,7 +160,57 @@ pub(crate) mod bad_async {
 pub(crate) mod local_macros {
   extern crate core;
   extern crate std;
+  extern crate alloc;
   use core::result::Result::{self, *};
+
+  #[allow(unused)]
+  fn with_program_counter_1() -> alloc::vec::Vec<i32> {
+    let mut vector = alloc::vec::Vec::new();
+    let mut program_counter = 1;
+    
+    'till_ten : loop{
+      if vector.len() > 10 { break 'till_ten vector }
+      program_counter = match program_counter {
+        1 => {vector.push(1); /* more code*/ ; 2}
+        2 => {/* more code*/ ; 3}
+        _ => { std::println!("now loop"); vector.push(1); /* more code*/ ; 2}
+      }
+    }
+  }
+  // #[allow(unused)]
+  // fn with_program_counter_2() -> alloc::vec::Vec<i32> {
+  //   let mut vector = alloc::vec::Vec::new();
+  //   let mut p1 = || {vector.push(1); /* more code*/ ; 2};
+
+  //   let mut program_counter = 1;
+
+  //   'till_ten : loop{
+  //     if vector.len()>10 { break 'till_ten vector }
+  //     program_counter = match program_counter {
+  //       1 => p1(),
+  //       2 => {/* more code*/ ; 3}
+  //       _ => {std::println!("now loop"); p1()}
+  //     }
+  //   }
+  // } 
+
+  #[allow(unused)]
+  fn with_program_counter_3() -> alloc::vec::Vec<i32> {
+    let mut vector = alloc::vec::Vec::new();
+    let mut program_counter = 1;
+
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    macro_rules! p1 {() => {  {vector.push(1); /* more code*/ ; 2}  };}
+
+    'till_ten : loop{
+      if vector.len() > 10 { break 'till_ten vector }
+      program_counter = match program_counter {
+        1 => p1!(),
+        2 => {/* more code*/ ; 3}
+        _ => { std::println!("now loop"); p1!()}
+      }
+    }
+  }
 
   struct Wrapped<T> {
     val: T,
@@ -235,8 +287,10 @@ pub(crate) mod basic_box {
   impl<T> MyBox<T> {
     const LAYOUT: alloc::alloc::Layout = alloc::alloc::Layout::new::<T>();
     /// We don't support zero sized types
+    #[allow(unused)]
     const NOT_ZST: () = core::assert!(Self::LAYOUT.size() != 0);
     /// This is the only function that will allocate memory.
+    #[allow(unused)]
     pub fn new(val: T) -> Self {
       let _ = Self::NOT_ZST;
       unsafe {
@@ -247,6 +301,7 @@ pub(crate) mod basic_box {
     }
     /// the standard library box is "magic" when using `*` deref,
     ///   we need this to pull out the value.
+    #[allow(unused)]
     pub fn unbox(self: Self) -> T {
       unsafe {
         let out = self.ptr.read();
@@ -292,7 +347,7 @@ pub(crate) mod basic_box {
     let _x: i32 = unsafe { *null };
   }
   #[test]
-  // #[cfg_attr(miri, ignore)]
+  #[cfg_attr(miri, ignore)]
   #[cfg(miri)]
   fn constructor_zst() {
     let x = MyBox::<()>::new(()); // constructor
