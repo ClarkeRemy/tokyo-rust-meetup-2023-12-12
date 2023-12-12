@@ -17,7 +17,7 @@ When you want to either make your code more explicit, or want to better understa
 ```
 
 This will do 2 major things.
-First is that `std::prelude::*` will it implicitly be imported into your project in all files (with `#![no_std]` it would be `core::prelude::*`).
+First is that `std::prelude::*` will it no longer implicitly be imported into your project in all files (with `#![no_std]` it would be `core::prelude::*`).
 
 Second is that Cargo will no longer implicitly add `extern crate` with each dependency in your `Cargo.toml` manifest 
 
